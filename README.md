@@ -147,26 +147,3 @@ examples/
 ## License
 
 This project uses the MIT License.
-
-Why MIT:
-- very easy to fork
-- easy to contribute to
-- easy to redistribute
-- widely understood and accepted for OSS utility packages
-
-## Safety review before public release
-
-I only included:
-- the 4 extension source files
-- generic example config files derived from extension defaults
-- package metadata and docs
-
-I did **not** include:
-- your dotfiles repo history
-- private settings
-- session files
-- logs
-- work-specific docs
-- local absolute paths in README examples
-
-That said, review the extension code before making the repo public because the code still reflects your personal workflows and extension behavior. The examples themselves look safe.
