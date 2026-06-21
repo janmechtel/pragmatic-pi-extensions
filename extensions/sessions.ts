@@ -427,9 +427,14 @@ async function loadSessions(ctx?: ExtensionContext): Promise<SessionInfo[]> {
 
 class AmpSessionMentionPicker implements Component, Focusable {
 	private _focused = false;
+type Scope = "directory" | "all";
+
+class AmpSessionMentionPicker implements Component, Focusable {
+	private _focused = false;
 	private query = "";
 	private selectedIndex = 0;
 	private scrollOffset = 0;
+	private scope: Scope = "directory";
 	onSelect?: (reference: string) => void;
 	onCancel?: () => void;
 
@@ -438,6 +443,7 @@ class AmpSessionMentionPicker implements Component, Focusable {
 		private readonly sessions: SessionInfo[],
 		private readonly theme: Theme,
 		private readonly keybindings: KeybindingsManager,
+		private readonly cwd: string,
 		initialQuery = "",
 	) {
 		this.query = initialQuery;
@@ -455,6 +461,11 @@ class AmpSessionMentionPicker implements Component, Focusable {
 		const filtered = this.filteredItems();
 		if (this.keybindings.matches(data, "tui.select.cancel") || matchesKey(data, Key.escape) || matchesKey(data, Key.ctrl("c"))) {
 			this.onCancel?.();
+			return;
+		}
+		if (data === "\t") {
+			this.scope = this.scope === "directory" ? "all" : "directory";
+			this.resetSelection();
 			return;
 		}
 		if (this.keybindings.matches(data, "tui.select.up") || matchesKey(data, Key.up)) {
@@ -497,6 +508,7 @@ class AmpSessionMentionPicker implements Component, Focusable {
 		if (rows.length === 0) rows.push(this.theme.fg("warning", "No sessions match"));
 		return [
 			topBorder(boxWidth, this.theme, " Mention Session "),
+			wrapPickerContent(this.renderScopeSelector(innerWidth), boxWidth, this.theme),
 			wrapPickerContent(this.renderInput(innerWidth), boxWidth, this.theme),
 			wrapPickerContent("", boxWidth, this.theme),
 			...rows.map((row) => wrapPickerContent(row, boxWidth, this.theme)),
@@ -519,8 +531,22 @@ class AmpSessionMentionPicker implements Component, Focusable {
 		if (this.selectedIndex > lastVisible) this.scrollOffset = this.selectedIndex - MAX_VISIBLE_SESSIONS + 1;
 	}
 
+	private renderScopeSelector(width: number): string {
+		const dirLabel = this.scope === "directory"
+			? this.theme.fg("accent", this.theme.bold("● Directory"))
+			: this.theme.fg("dim", "○ Directory");
+		const allLabel = this.scope === "all"
+			? this.theme.fg("accent", this.theme.bold("● All"))
+			: this.theme.fg("dim", "○ All");
+		const hint = this.theme.fg("dim", "  Tab↹");
+		return truncateToWidth(`${dirLabel}  ${allLabel}${hint}`, width, "…", true);
+	}
+
 	private filteredItems(): AutocompleteItem[] {
-		return sessionAutocompleteItems(this.sessions, this.query);
+		const sessions = this.scope === "directory"
+			? this.sessions.filter((s) => s.cwd === this.cwd)
+			: this.sessions;
+		return sessionAutocompleteItems(sessions, this.query);
 	}
 
 	private renderInput(width: number): string {
@@ -561,7 +587,7 @@ function padVisible(line: string, width: number): string {
 async function showSessionMentionPicker(ctx: ExtensionContext, sessions: SessionInfo[], initialQuery = ""): Promise<string | null> {
 	return ctx.ui.custom<string | null>(
 		(tui, theme, keybindings, done) => {
-			const picker = new AmpSessionMentionPicker(tui, sessions, theme, keybindings, initialQuery);
+			const picker = new AmpSessionMentionPicker(tui, sessions, theme, keybindings, ctx.cwd, initialQuery);
 			picker.onSelect = (value) => done(value);
 			picker.onCancel = () => done(null);
 			return picker;
