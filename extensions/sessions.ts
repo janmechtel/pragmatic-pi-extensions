@@ -425,8 +425,6 @@ async function loadSessions(ctx?: ExtensionContext): Promise<SessionInfo[]> {
 	}
 }
 
-class AmpSessionMentionPicker implements Component, Focusable {
-	private _focused = false;
 type Scope = "directory" | "all";
 
 class AmpSessionMentionPicker implements Component, Focusable {
