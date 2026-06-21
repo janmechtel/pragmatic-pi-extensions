@@ -388,8 +388,7 @@ function sessionAutocompleteItems(sessions: SessionInfo[], query: string): Autoc
 		});
 	return filtered
 		.sort((a, b) => b.createdMs - a.createdMs)
-		.map((item) => ({ value: item.value, label: formatSessionAutocompleteLabel(item) }))
-		.slice(0, 50);
+		.map((item) => ({ value: item.value, label: formatSessionAutocompleteLabel(item) }));
 }
 
 async function loadSessions(ctx?: ExtensionContext): Promise<SessionInfo[]> {
