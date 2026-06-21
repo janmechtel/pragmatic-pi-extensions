@@ -18,7 +18,7 @@ import {
 
 const EXTENSION_KEY = "session-mention";
 const SESSION_REF_PREFIX = "@S-";
-const CACHE_TTL_MS = 60_000;
+const CACHE_TTL_MS = 300_000; // 5 min; disk-level caching makes re-loads fast
 const MAX_VISIBLE_SESSIONS = 14;
 const SESSION_AUTOCOMPLETE_TIMESTAMP_WIDTH = 6;
 const SUMMARY_TIMEOUT_MS = 45_000;
@@ -400,7 +400,7 @@ async function loadSessions(ctx?: ExtensionContext): Promise<SessionInfo[]> {
 	}
 
 	writeSessionLog("loadSessions:start", "scanning session index");
-	const promise = SessionManager.listAll((loaded, total) => {
+	const promise = SessionManager.listAll((loaded, total, _session) => {
 		if (!ctx?.hasUI) return;
 		ctx.ui.setStatus(EXTENSION_KEY, `Scanning sessions ${loaded}/${total}`);
 	});
