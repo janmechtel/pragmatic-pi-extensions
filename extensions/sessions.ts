@@ -750,6 +750,7 @@ export default function sessionsExtension(pi: ExtensionAPI) {
 
 	pi.on("session_start", async (_event, ctx) => {
 		sessionsCache = undefined;
+		void loadSessions(ctx); // warm cache in background at startup
 		if (!ctx.hasUI) return;
 		ctx.ui.onTerminalInput((data) => {
 			if (sessionMentionPickerOpen || data !== "@") return undefined;
